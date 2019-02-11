@@ -1,4 +1,5 @@
 # Prerequisites
+*.Td
 *.d
 
 # Compiled Object files
@@ -30,3 +31,11 @@
 *.exe
 *.out
 *.app
+prog
+
+# Makefile generated folders
+obj/
+dep/
+
+# Makefile generated files
+.pre_build
