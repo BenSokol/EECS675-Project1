@@ -32,6 +32,7 @@
 *.out
 *.app
 prog
+battleship
 
 # Makefile generated folders
 obj/

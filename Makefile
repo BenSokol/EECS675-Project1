@@ -2,7 +2,7 @@
 # @Author:   Ben Sokol
 # @Email:    ben@bensokol.com
 # @Created:  October 25th, 2018 [7:15pm]
-# @Modified: February 11th, 2019 [11:34am]
+# @Modified: February 13th, 2019 [1:40pm]
 # @Version:  2.3.0
 #
 # Copyright (C) 2018 by Ben Sokol. All Rights Reserved.
@@ -19,7 +19,7 @@ CURRENT_STEP = $(words $N)$(eval N := x $N)
 endif
 
 # Makefile Settings
-EXE = prog
+EXE = battleship
 
 SRCDIR = src
 OBJDIR = obj
@@ -39,6 +39,8 @@ LINUX_FLAGS = -pthread
 IN_FILE =
 OUT_FILE =
 ERR_FILE =
+
+COMMAND_LINE_ARGS = -1 3 4
 
 PRE_BUILD_TARGETS =
 
@@ -123,7 +125,7 @@ clean:
 
 .PHONY: memtest
 memtest: $(EXE)
-	valgrind --leak-check=full --show-leak-kinds=all ./$(EXE) || true
+	valgrind --leak-check=full --show-leak-kinds=all ./$(EXE) $(COMMAND_LINE_ARGS) || true
 
 # Runs "clean" then makes a tar file of the whole directory in the folder ../tar/.
 .PHONY: tar
@@ -137,11 +139,11 @@ tar: clean
 # Make and run program. Doesnt report errors to make or terminal
 .PHONY: run
 run: $(EXE)
-	@./$(EXE) || printf "Non-zero return code detected.\n"; true
+	@./$(EXE) $(COMMAND_LINE_ARGS) || printf "Non-zero return code detected.\n"; true
 
 .PHONY: debug
 debug: $(EXE)
-	@$(DEBUGGER) ./$(EXE)
+	@$(DEBUGGER) ./$(EXE) $(COMMAND_LINE_ARGS)
 
 # Debug variables
 .PHONY: var
