@@ -1,5 +1,4 @@
-[submodule "src/Submodules"]
-	path = src/Submodules
-	url = ./src/Submodules
+[submodule "src/Submodules/utilities"]
+	path = src/Submodules/utilities
+	url = ./src/Submodules/utilities
   branch = master
-
