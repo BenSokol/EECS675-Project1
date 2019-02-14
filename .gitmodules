@@ -2,3 +2,6 @@
 	path = src/Submodules/utilities
 	url = ./src/Submodules/utilities
   branch = master
+[submodule "Submodules/utilities"]
+	path = Submodules/utilities
+	url = ./Submodules/utilities/
