@@ -1,8 +1,8 @@
 [submodule "submodules/utilities"]
 	path = submodules/utilities
-	url = ./submodules/utilities/
-  branch = master
+	url = https://github.com/BenSokol/utilities
+	branch = master
 [submodule "submodules/build-tools"]
 	path = submodules/build-tools
-	url = ./submodules/build-tools/
-  branch = master
+	url = https://github.com/BenSokol/build-tools
+	branch = master
