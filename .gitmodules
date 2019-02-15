@@ -1,7 +1,8 @@
-[submodule "src/Submodules/utilities"]
-	path = src/Submodules/utilities
-	url = ./src/Submodules/utilities
+[submodule "submodules/utilities"]
+	path = submodules/utilities
+	url = ./submodules/utilities/
   branch = master
-[submodule "Submodules/utilities"]
-	path = Submodules/utilities
-	url = ./Submodules/utilities/
+[submodule "submodules/build-tools"]
+	path = submodules/build-tools
+	url = ./submodules/build-tools/
+  branch = master
