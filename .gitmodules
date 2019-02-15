@@ -6,3 +6,7 @@
 	path = submodules/build-tools
 	url = https://github.com/BenSokol/build-tools
 	branch = master
+[submodule "submodules/threadsafe-tools"]
+	path = submodules/threadsafe-tools
+	url = https://github.com/BenSokol/threadsafe-tools.git
+	branch = master
