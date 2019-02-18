@@ -3,7 +3,7 @@
 * @Author:   Ben Sokol
 * @Email:    ben@bensokol.com
 * @Created:  February 13th, 2019 [11:01am]
-* @Modified: February 18th, 2019 [2:05pm]
+* @Modified: February 18th, 2019 [2:23pm]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
@@ -41,11 +41,11 @@ Battleship::Battleship(const int argc, const char *argv[]) : mVersionMajor(0), m
   mThreads = std::vector<std::future<void>>(mNumThreads);
   mPlayers = std::vector<std::unique_ptr<BattleshipPlayer>>(mNumThreads);
 
-  mtx = std::vector<std::recursive_mutex>(MTX_COUNT);
-  lck = std::vector<std::unique_lock<std::recursive_mutex>>(MTX_COUNT);
+  mtx = std::vector<std::shared_mutex>(MTX_COUNT);
+  lck = std::vector<std::unique_lock<std::shared_mutex>>(MTX_COUNT);
 
   for (size_t i = 0; i < MTX_COUNT; ++i) {
-    lck[i] = std::unique_lock<std::recursive_mutex>(mtx[i], std::defer_lock);
+    lck[i] = std::unique_lock<std::shared_mutex>(mtx[i], std::defer_lock);
   }
 }
 

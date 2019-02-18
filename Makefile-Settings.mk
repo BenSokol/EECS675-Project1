@@ -2,7 +2,7 @@
 # @Author:   Ben Sokol <Ben>
 # @Email:    ben@bensokol.com
 # @Created:  February 14th, 2019 [5:21pm]
-# @Modified: February 18th, 2019 [1:52pm]
+# @Modified: February 18th, 2019 [3:01pm]
 # @Version:  1.0.0
 #
 # Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
@@ -12,20 +12,19 @@
 ###############################################################################
 EXE = battleship
 
-# KU's cycle servers version of gcc does not support all features this project uses. clang-5.0 does.
-ifeq ($(shell uname),Linux)
-CXX = clang++-5.0
-CC = clang-5.0
+ifeq ($(shell hostname | head -c5),cycle)
+CXXSTD = -std=c++1z
+else
+CXXSTD = -std=c++17
 endif
 
 CCSTD = -std=c11
-CXXSTD = -std=c++17
 
 CCFLAGS = -O3 -g
 CXXFLAGS = -O3 -g
-WARNING_FLAGS = -Wall -Wextra -Wpedantic
+WARNING_FLAGS = -Wall -Wextra
 WARNING_FLAGS_GCC =
-WARNING_FLAGS_CLANG = -Weverything -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-padded -Wno-date-time
+WARNING_FLAGS_CLANG = -Wpedantic -Weverything -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-padded -Wno-date-time
 
 MACOS_FLAGS =
 LINUX_FLAGS = -pthread
