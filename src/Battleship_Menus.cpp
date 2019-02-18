@@ -1,20 +1,21 @@
 /**
-* @Filename: battleship_menus.cpp
+* @Filename: Battleship_Menus.cpp
 * @Author:   Ben Sokol <Ben>
 * @Email:    ben@bensokol.com
 * @Created:  February 15th, 2019 [1:19pm]
-* @Modified: February 15th, 2019 [1:22pm]
+* @Modified: February 18th, 2019 [1:16pm]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
 */
 
+#include <cassert>
 #include <iostream>
 
 #include "UTL_colors.h"
 #include "UTL_textWrap.hpp"
 
-#include "battleship.hpp"
+#include "Battleship.hpp"
 
 
 /****************************************************************
@@ -46,7 +47,7 @@ void Battleship::printHelp() const {
   std::cout << "\n";
   std::cout << "\n" << COLOR_RED_BOLD << "DESCRIPTION" << COLOR_RESET;
   std::cout << "\n";
-  std::cout << UTL::textWrap(
+  std::cout << textWrap(
       "\tThis program will run a multi-threaded simulation of the game Battleship.\n\tNOTE: The number "
       "of targets M must be less than or equal N² (M≤N²)",
       true);
@@ -71,7 +72,7 @@ void Battleship::printHelp() const {
   std::cout << "\n";
   std::cout << "\n\t./battleship 4 3 4";
   std::cout << "\n";
-  std::cout << UTL::textWrap(
+  std::cout << textWrap(
       "\n\tWill run a simulation using 4 threads of 3x3 boards that each have 4 randomly placed targets.", true);
 
   // Copyright

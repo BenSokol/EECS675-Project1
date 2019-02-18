@@ -1,9 +1,9 @@
 /**
-* @Filename: battleship.cpp
+* @Filename: Battleship.cpp
 * @Author:   Ben Sokol
 * @Email:    ben@bensokol.com
 * @Created:  February 13th, 2019 [11:01am]
-* @Modified: February 15th, 2019 [2:58pm]
+* @Modified: February 18th, 2019 [2:05pm]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
@@ -11,19 +11,21 @@
 
 #include <cstdlib>
 #include <future>
-#include <iostream>
-#include <mutex>
+#include <memory>
 #include <shared_mutex>
+#include <vector>
+
+#include <iostream>
 #include <string>
 #include <thread>
+
 
 #include "TS_print.hpp"
 #include "UTL_assert.h"
 #include "UTL_colors.h"
 #include "UTL_inputValidation.hpp"
-//#include "UTL_textWrap.hpp"
 
-#include "battleship.hpp"
+#include "Battleship.hpp"
 
 
 /****************************************************************
@@ -37,13 +39,13 @@ Battleship::Battleship(const int argc, const char *argv[]) : mVersionMajor(0), m
   }
 
   mThreads = std::vector<std::future<void>>(mNumThreads);
-  mPlayers = std::vector<BattleshipPlayer *>(mNumThreads);
+  mPlayers = std::vector<std::unique_ptr<BattleshipPlayer>>(mNumThreads);
 
-  mtx = std::vector<std::shared_mutex>(MTX_COUNT);
-  lck = std::vector<std::unique_lock<std::shared_mutex>>(MTX_COUNT);
+  mtx = std::vector<std::recursive_mutex>(MTX_COUNT);
+  lck = std::vector<std::unique_lock<std::recursive_mutex>>(MTX_COUNT);
 
   for (size_t i = 0; i < MTX_COUNT; ++i) {
-    lck[i] = std::unique_lock<std::shared_mutex>(mtx[i], std::defer_lock);
+    lck[i] = std::unique_lock<std::recursive_mutex>(mtx[i], std::defer_lock);
   }
 }
 
@@ -54,10 +56,6 @@ Battleship::Battleship(const int argc, const char *argv[]) : mVersionMajor(0), m
 Battleship::~Battleship() {
   for (auto &thread : mThreads) {
     thread.wait();
-  }
-
-  for (auto &player : mPlayers) {
-    delete player;
   }
 }
 
@@ -133,7 +131,7 @@ bool Battleship::initParameters(const int &argc, const char *argv[]) {
 *
 ****************************************************************/
 void Battleship::initPlayers(size_t playerNum) {
-  mPlayers[playerNum] = new BattleshipPlayer();
+  mPlayers[playerNum] = std::unique_ptr<BattleshipPlayer>(new BattleshipPlayer());
 
   TS::print(mtx[COUT], "Player ", playerNum, " has been initialized.\n");
 }

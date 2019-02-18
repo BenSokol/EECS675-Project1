@@ -1,9 +1,9 @@
 /**
-* @Filename: battleship.hpp
+* @Filename: Battleship.hpp
 * @Author:   Ben Sokol
 * @Email:    ben@bensokol.com
 * @Created:  February 13th, 2019 [10:58am]
-* @Modified: February 15th, 2019 [2:35pm]
+* @Modified: February 18th, 2019 [2:05pm]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
@@ -14,7 +14,7 @@
 
 #include <cstdlib>
 #include <future>
-#include <mutex>
+#include <memory>
 #include <shared_mutex>
 #include <vector>
 
@@ -43,15 +43,15 @@ private:
   const size_t mVersionBug;
 
   // Players
-  std::vector<BattleshipPlayer *> mPlayers;
+  std::vector<std::unique_ptr<BattleshipPlayer>> mPlayers;
 
   // Threads/Futures
   std::vector<std::future<void>> mThreads;
 
-  // Mutexes/Locks
+  // recursive_mutexes/Locks
   enum MTX { COUT, DEBUG, MTX_COUNT };
-  std::vector<std::shared_mutex> mtx;
-  std::vector<std::unique_lock<std::shared_mutex>> lck;
+  std::vector<std::recursive_mutex> mtx;
+  std::vector<std::unique_lock<std::recursive_mutex>> lck;
 
   // Other Member variables
   size_t mNumThreads;
