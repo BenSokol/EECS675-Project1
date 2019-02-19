@@ -1,0 +1,79 @@
+language: cpp
+
+sudo: required
+
+matrix:
+  include:
+    - os: linux
+      dist: Xenial
+      compiler: gcc
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - gcc-5
+            - g++-5
+            - cppcheck
+      script:
+        - make CC=gcc-5 CXX=g++-5
+        - ./battleship 4 3 4
+        - cppcheck --quiet --error-exitcode=1 .
+
+
+    - os: linux
+      dist: Xenial
+      compiler: gcc
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - gcc-6
+            - g++-6
+            - cppcheck
+      script:
+        - make CC=gcc-6 CXX=g++-6
+        - ./battleship 4 3 4
+        - cppcheck --quiet --error-exitcode=1 .
+
+
+    - os: linux
+      dist: Xenial
+      compiler: gcc
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - gcc-7
+            - g++-7
+            - cppcheck
+      script:
+        - make CC=gcc-7 CXX=g++-7
+        - ./battleship 4 3 4
+        - cppcheck --quiet --error-exitcode=1 .
+
+
+    - os: linux
+      dist: Xenial
+      compiler: gcc
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - gcc-8
+            - g++-8
+            - cppcheck
+      script:
+        - make CC=gcc-8 CXX=g++-8
+        - ./battleship 4 3 4
+        - cppcheck --quiet --error-exitcode=1 .
+
+
+    - os: osx
+      osx_image: xcode10.1
+      script:
+        - make
+        - make run
