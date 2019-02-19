@@ -3,7 +3,7 @@
 * @Author:   Ben Sokol
 * @Email:    ben@bensokol.com
 * @Created:  February 13th, 2019 [10:58am]
-* @Modified: February 18th, 2019 [2:58pm]
+* @Modified: February 18th, 2019 [9:09pm]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
@@ -15,8 +15,10 @@
 #include <cstdlib>
 #include <future>
 #include <memory>
+#include <mutex>
 #include <shared_mutex>
 #include <vector>
+
 
 //#include <atomic>
 //#include <condition_variable>
@@ -25,19 +27,10 @@
 #include "BattleshipPlayer.hpp"
 
 // Enable ability to use shared_mutex on any platform that supports shared_timed_mutex
-#if defined(__clang__)
-#if __clang_major__ < 3 && __clang_minor__ < 4
-#error Requires clang version > 3.4
-#elif __clang_major__ < 3 && __clang_minor__ < 7
+#if !defined(__cpp_lib_shared_mutex) && !defined(_LIBCPP_AVAILABILITY_SHARED_MUTEX)
 #define shared_mutex shared_timed_mutex
-#warning Detected GCC version that does NOT contain std::shared_mutex. Using std::shared_timed_mutex instead.
-#endif  // #if __clang_major__ < 3 && __clang_minor__ < 7
-#elif defined(__GNUC__) && __GNUC__ < 5
-#error Requires clang version > 3.4
-#elif defined(__GNUC__) && __GNUC__ < 6
-#define shared_mutex shared_timed_mutex
-#warning Detected GCC version that does NOT contain std::shared_mutex. Using std::shared_timed_mutex instead.
-#endif  // #if defined(__clang__)
+#warning std::shared_mutex is not defined. Using std::shared_timed_mutex instead.
+#endif
 
 
 class Battleship {
