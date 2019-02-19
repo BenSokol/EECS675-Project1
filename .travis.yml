@@ -18,7 +18,7 @@ matrix:
       script:
         - make CC=gcc-5 CXX=g++-5
         - ./battleship 4 3 4
-        - cppcheck --quiet --error-exitcode=1 .
+        - make cppcheck
 
 
     - os: linux
@@ -35,7 +35,7 @@ matrix:
       script:
         - make CC=gcc-6 CXX=g++-6
         - ./battleship 4 3 4
-        - cppcheck --quiet --error-exitcode=1 .
+        - make cppcheck
 
 
     - os: linux
@@ -52,7 +52,7 @@ matrix:
       script:
         - make CC=gcc-7 CXX=g++-7
         - ./battleship 4 3 4
-        - cppcheck --quiet --error-exitcode=1 .
+        - make cppcheck
 
 
     - os: linux
@@ -69,7 +69,7 @@ matrix:
       script:
         - make CC=gcc-8 CXX=g++-8
         - ./battleship 4 3 4
-        - cppcheck --quiet --error-exitcode=1 .
+        - make cppcheck
 
 
     - os: osx
