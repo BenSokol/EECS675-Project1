@@ -1,122 +1,70 @@
 language: cpp
+dist: xenial
 sudo: required
 
-os:
-  - linux
-  - osx
+matrix:
+  include:
 
-dist: Xenial
-osx_image: xcode10.1
+    # CppCheck
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - gcc-5
+            - g++-5
+      script:
+        - make
+        - make var
+        - make cppcheck
 
-addons:
-  apt:
-    sources:
-      - ubuntu-toolchain-r-test
-    packages:
-      - gcc-5
-      - g++-5
-      - gcc-6
-      - g++-6
-      - gcc-7
-      - g++-7
-      - gcc-8
-      - g++-8
-      - cppcheck
-  homebrew:
-    packages:
-      - gcc-8
-#
-# matrix:
-#   include:
-#     - os: linux
-#       dist: Xenial
-#       compiler: gcc
-#       addons:
-#         apt:
-#           sources:
-#             - ubuntu-toolchain-r-test
-#           packages:
-#             - gcc-5
-#             - g++-5
-#             - cppcheck
-#       script:
-#         - make CC=gcc-5 CXX=g++-5
-#         - make run
-#         - make cppcheck
-#
-#
-#     - os: linux
-#       dist: Xenial
-#       compiler: gcc
-#       addons:
-#         apt:
-#           sources:
-#             - ubuntu-toolchain-r-test
-#           packages:
-#             - gcc-6
-#             - g++-6
-#             - cppcheck
-#       script:
-#         - sudo ln -s /usr/bin/gcc-6 /usr/local/bin/gcc
-#         - sudo ln -s /usr/bin/g++-6 /usr/local/bin/g++
-#         - export CC=/usr/bin/gcc-6
-#         - export CXX=/usr/bin/g++-6
-#         - make
-#         - make run
-#         - make cppcheck
-#
-#
-#     - os: linux
-#       dist: Xenial
-#       compiler: gcc
-#       addons:
-#         apt:
-#           sources:
-#             - ubuntu-toolchain-r-test
-#           packages:
-#             - gcc-7
-#             - g++-7
-#             - cppcheck
-#       script:
-#         - sudo ln -s /usr/bin/gcc-7 /usr/local/bin/gcc
-#         - sudo ln -s /usr/bin/g++-7 /usr/local/bin/g++
-#         - export CC=/usr/bin/gcc-7
-#         - export CXX=/usr/bin/g++-7
-#         - make
-#         - make run
-#         - make cppcheck
-#
-#
-#     - os: linux
-#       dist: Xenial
-#       compiler: gcc
-#       addons:
-#         apt:
-#           sources:
-#             - ubuntu-toolchain-r-test
-#           packages:
-#             - gcc-8
-#             - g++-8
-#             - cppcheck
-#       script:
-#         - sudo ln -s /usr/bin/gcc-8 /usr/local/bin/gcc
-#         - sudo ln -s /usr/bin/g++-8 /usr/local/bin/g++
-#         - gcc -v && g++ -v
-#         - export CC=/usr/bin/gcc-8
-#         - export CXX=/usr/bin/g++-8
-#         - make
-#         - make run
-#         - make cppcheck
-#
-#
-#     - os: osx
-#       osx_image: xcode10.1
-#       script:
-#         - make
-#         - make run
+    # g++ 6
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - gcc-5
+            - g++-5
+      script:
+        - make
+        - make var
+        - make run
 
-script:
-  - if [ $TRAVIS_OS_NAME = linux ]; then make CC=gcc-5 CXX=g++-5 && make clean && make CC=gcc-6 CXX=g++-6 && make clean && make CC=gcc-7 CXX=g++-7 && make clean && make CC=gcc-8 CXX=g++-8; fi
-  - if [ $TRAVIS_OS_NAME = osx ]; then make && make clean && make CC=gcc-8 CXX=g++-8; fi
-  - make run
-  - make cppcheck
+    # g++ 6
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - gcc-6
+            - g++-6
+      script:
+        - make
+        - make var
+        - make run
+
+    # g++ 7
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - gcc-7
+            - g++-7
+      script:
+        - make
+        - make var
+        - make run
+
+    # XCode 10.1
+    - os: osx
+      osx_image: xcode10.1
+      script:
+        - make
+        - make var
+        - make run
