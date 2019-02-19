@@ -1,12 +1,19 @@
 language: cpp
 dist: xenial
-sudo: required
+
+notifications:
+  email:
+    recipients:
+      - git@bensokol.com
+    on_success: always # default: always
+    on_failure: always # default: always
 
 matrix:
   include:
 
-    # CppCheck
+    # g++ 5 && cppcheck
     - os: linux
+      compiler: gcc
       addons:
         apt:
           sources:
@@ -14,57 +21,42 @@ matrix:
           packages:
             - gcc-5
             - g++-5
+            - cppcheck
+      env:
+         - MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
       script:
-        - make
         - make var
+        - make
+        - make run
         - make cppcheck
 
-    # g++ 6
+    # g++ 8
     - os: linux
+      compiler: gcc
       addons:
         apt:
           sources:
             - ubuntu-toolchain-r-test
           packages:
-            - gcc-5
-            - g++-5
-      script:
-        - make
-        - make var
-        - make run
-
-    # g++ 6
-    - os: linux
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - gcc-6
-            - g++-6
-      script:
-        - make
-        - make var
-        - make run
-
-    # g++ 7
-    - os: linux
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - gcc-7
-            - g++-7
-      script:
-        - make
-        - make var
-        - make run
+            - gcc-8
+            - g++-8
+      env:
+        - MATRIX_EVAL="CC=gcc-8 && CXX=g++-8"
 
     # XCode 10.1
     - os: osx
       osx_image: xcode10.1
-      script:
-        - make
-        - make var
-        - make run
+
+    # macOS using GCC-8
+    - os: osx
+      osx_image: xcode10.1
+      env:
+        - MATRIX_EVAL="brew update && brew install gcc && brew link gcc && CC=gcc-8 && CXX=g++-8"
+
+before_install:
+  - eval "${MATRIX_EVAL}"
+
+script:
+  - make var
+  - make
+  - make run
