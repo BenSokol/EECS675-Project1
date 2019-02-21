@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.com/BenSokol/EECS675-Project1.svg?branch=master)](https://travis-ci.com/BenSokol/EECS675-Project1) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/9be4f74279de46b89bcc44d5cd41d47c)](https://www.codacy.com/app/BenSokol/EECS675-Project1?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=BenSokol/EECS675-Project1&amp;utm_campaign=Badge_Grade) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Build Status](https://travis-ci.com/BenSokol/EECS675-Project1.svg?branch=master)](https://travis-ci.com/BenSokol/EECS675-Project1) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/9be4f74279de46b89bcc44d5cd41d47c)](https://www.codacy.com/app/BenSokol/EECS675-Project1?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=BenSokol/EECS675-Project1&amp;utm_campaign=Badge_Grade) ![GitHub](https://img.shields.io/github/license/BenSokol/EECS675-Project1.svg)
 # EECS675-Project1
 
 ## Project Specification
