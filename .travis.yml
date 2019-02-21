@@ -1,65 +1,64 @@
 language: cpp
 dist: xenial
-
 notifications:
   email:
     recipients:
-      - git@bensokol.com
-    on_success: change # default: always
-    on_failure: always # default: always
-
+    - secure: n8dik9Fsqz7RGUFeBSvlGpE9o/x16Vh2kj8wmEisw2iciF6G+56KzURE3UzSjGMJSY8eKM5rdkByfKEaDTEWof1oM84G8t69/oRvZ10EmZBO5NJKar4fbcRTBnqQmyjVYfFsoATY2wI3Zp8IQTEyCVOE3npZnvpc6hyn0/LCeJkPsK494QzMPNPRmvSCj9NPwkMVe7ln76VbFwPeQnTL5TLOKj7lqJ9rzRBV4BeEnZ6Cyu8qcOZv1A1vch0ttu66vrsGr0Bft0YYXPmid06o40BUQ+UdvbgIBhR/A05gccFR0laP2PzVX0UQSAlsyu5j4+igIyouXvTJGfWzGuVo0PvJwxYEGdxMJTk3WOlfqXbnQbU9VGBZqmzRaJqtHGwqFBh5Mo1GcwU5a0ZyiRE/3ol2sj9nWiCt79xIDck0dAOhknIqBTf76Ul4KkKE7DEZL5y9pILUhHvhppVRiMiNlHHgw0NWAidA8Ze7oOqcQgfieX6+TyUULW6HFu9EgJxu8iFfrltiari3vHq7szNCt78zLT4OgOhmtVjHepPH2ODg2s5NIRPajwuipfKuADxNJE5smGrvGtc5n27K6GM80aGkbN3YGd7n9kUNFsn9NUPPbYOKJI+6DGOdInn+yH0px4KPwT18kAzwke8uFayzqxMFRJQIvhsa0n/togYQopY=
+    on_success: change
+    on_failure: always
+  slack:
+    rooms:
+      - bensokol:WVwEX7REV8cbSaY6sbdLGIaW#travis-ci
+    on_success: always
+    on_failure: always
+    on_start: always
+    on_cancel: always
+    on_error: always
+    template:
+      - "Repo `%{repository_slug}` on branch `%{branch}`."
+      - "Commit (<%{compare_url}|%{commit}>) by *%{author}* with subject _%{commit_subject}_"
+      - "Build (<%{build_url}|#%{build_number}>) took *%{duration}*"
+      - "Result: *%{result}*"
 matrix:
-  fast_finish: true
   include:
-    # g++ 5
-    - name: "Linux g++-5"
-      os: linux
-      compiler: gcc
-
-    # g++ 8
-    - name: "Linux g++-8"
-      os: linux
-      compiler: gcc
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - gcc-8
-            - g++-8
-      env:
-        - MATRIX_EVAL="CC=gcc-8 && CXX=g++-8"
-
-    # XCode 10.1
-    - name: "macOS clang"
-      os: osx
-      osx_image: xcode10.1
-
-    # macOS using GCC-8
-    - name: "macOS g++-8"
-      os: osx
-      osx_image: xcode10.1
-      env:
-        - MATRIX_EVAL="brew update && brew install gcc && brew link gcc && CC=gcc-8 && CXX=g++-8"
-
-    # cppcheck
-    - name: "cppcheck"
-      os: linux
-      compiler: gcc
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - cppcheck
-      script:
-        - make var
-        - make cppcheck
-
+  - name: Linux - Ubuntu - Xenial - g++-5
+    os: linux
+    compiler: gcc
+  - name: Linux - Ubuntu - Xenial - g++-8
+    os: linux
+    compiler: gcc
+    addons:
+      apt:
+        sources:
+        - ubuntu-toolchain-r-test
+        packages:
+        - gcc-8
+        - g++-8
+    env:
+    - MATRIX_EVAL="CC=gcc-8 && CXX=g++-8"
+  - name: macOS - 10.13.6 - clang
+    os: osx
+    osx_image: xcode10.1
+  - name: macOS - 10.13.6 - g++-8
+    os: osx
+    osx_image: xcode10.1
+    env:
+    - MATRIX_EVAL="brew link gcc && CC=gcc-8 && CXX=g++-8"
+  - name: Linux - Ubuntu - Xenial - cppcheck
+    os: linux
+    compiler: gcc
+    addons:
+      apt:
+        sources:
+        - ubuntu-toolchain-r-test
+        packages:
+        - cppcheck
+    script:
+    - make var
+    - make cppcheck
 before_install:
-  - eval "${MATRIX_EVAL}"
-
+- eval "${MATRIX_EVAL}"
 script:
-  - make var
-  - make
-  - make run
+- make var
+- make
+- make run
