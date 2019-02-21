@@ -31,12 +31,15 @@
 *.exe
 *.out
 *.app
+*.dSYM
 prog
 battleship
 
 # Makefile generated folders
 obj/
 dep/
+logs/
+make.log
 
 # Makefile generated files
 .pre_build

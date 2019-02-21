@@ -3,7 +3,7 @@
 * @Author:   Ben Sokol <Ben>
 * @Email:    ben@bensokol.com
 * @Created:  February 15th, 2019 [1:19pm]
-* @Modified: February 18th, 2019 [1:16pm]
+* @Modified: February 19th, 2019 [12:38am]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
@@ -22,7 +22,7 @@
 * printHelp:
 *
 ****************************************************************/
-void Battleship::printHelp() const {
+void Battleship::printHelp() {
   using namespace UTL;
 
   // TItle bar (TOP)

@@ -2,7 +2,7 @@
 # @Author:   Ben Sokol <Ben>
 # @Email:    ben@bensokol.com
 # @Created:  February 14th, 2019 [5:21pm]
-# @Modified: February 18th, 2019 [9:02pm]
+# @Modified: February 20th, 2019 [4:46pm]
 # @Version:  1.0.0
 #
 # Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
@@ -20,7 +20,7 @@ endif
 
 CCSTD = -std=c11
 
-CCFLAGS = -O3 -g
+CFLAGS = -O3 -g
 CXXFLAGS = -O3 -g
 WARNING_FLAGS = -Wall -Wextra
 WARNING_FLAGS_GCC =
@@ -33,3 +33,5 @@ COMMAND_LINE_ARGS = 4 3 4
 
 MAKEFILE_RULE_INSTALL_DISABLE = 1
 MAKEFILE_RULE_UNINSTALL_DISABLE = 1
+
+ENABLE_LOGGING = 1
