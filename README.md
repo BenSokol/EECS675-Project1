@@ -1,3 +1,2 @@
-[![Build Status](https://travis-ci.com/BenSokol/EECS675-Project1.svg?branch=master)](https://travis-ci.com/BenSokol/EECS675-Project1)
-
+[![Build Status](https://travis-ci.com/BenSokol/EECS675-Project1.svg?branch=master)](https://travis-ci.com/BenSokol/EECS675-Project1) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/9be4f74279de46b89bcc44d5cd41d47c)](https://www.codacy.com/app/BenSokol/EECS675-Project1?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=BenSokol/EECS675-Project1&amp;utm_campaign=Badge_Grade)
 # EECS675-Project1
