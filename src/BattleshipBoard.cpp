@@ -3,7 +3,7 @@
 * @Author:   Ben Sokol <Ben>
 * @Email:    ben@bensokol.com
 * @Created:  February 19th, 2019 [10:58am]
-* @Modified: February 20th, 2019 [11:31am]
+* @Modified: February 21st, 2019 [12:54am]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
@@ -58,7 +58,7 @@ bool BattleshipBoard::generateRandomCoordinates(std::pair<size_t, size_t> &coord
   std::lock_guard<std::recursive_mutex> lk1(mMtx);
   std::random_device rd;
 
-  if (mTargetsAvailable <= 0) {
+  if (mTargetsAvailable == 0) {
     return false;
   }
 
