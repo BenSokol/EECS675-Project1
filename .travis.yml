@@ -11,7 +11,7 @@ notifications:
 matrix:
   include:
 
-    # g++ 5 && cppcheck
+    # cppcheck
     - os: linux
       compiler: gcc
       addons:
@@ -19,11 +19,9 @@ matrix:
           sources:
             - ubuntu-toolchain-r-test
           packages:
-            - gcc-5
-            - g++-5
             - cppcheck
       env:
-        - MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
+        - MATRIX_EVAL=""
       script:
         - make var
         - make cppcheck
@@ -31,15 +29,8 @@ matrix:
     # g++ 5
     - os: linux
       compiler: gcc
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - gcc-5
-            - g++-5
       env:
-        - MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
+        - MATRIX_EVAL=""
 
     # g++ 8
     - os: linux
