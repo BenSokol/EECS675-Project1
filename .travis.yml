@@ -25,7 +25,7 @@ matrix:
       before_script:
         - wget https://github.com/danmar/cppcheck/archive/1.87.tar.gz -O /tmp/cppcheck.tar.gz
         - tar -xvf /tmp/cppcheck.tar.gz
-        - pushd cppcheck-1.87 && make SRCDIR=build CFGDIR=cfg HAVE_RULES=yes CXXFLAGS="-O2 -DNDEBUG -Wall -Wno-reorder -Wno-sign-compare -Wno-unused-function" && sudo make install SRCDIR=build CFGDIR=cfg HAVE_RULES=yes CXXFLAGS="-O2 -DNDEBUG -Wall -Wno-reorder -Wno-sign-compare -Wno-unused-function"&& popd
+        - pushd cppcheck-1.87 && make SRCDIR=build CFGDIR=cfg HAVE_RULES=yes CXXFLAGS="-O2 -DNDEBUG -Wall -Wno-reorder -Wno-sign-compare -Wno-unused-function" && sudo make -i install CFGDIR=cfg&& popd
         - export PATH=$PATH:$PWD/cppcheck-1.87:$PWD/cppcheck-1.87/cfg
       script:
         - make var
