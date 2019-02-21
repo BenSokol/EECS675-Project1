@@ -1,5 +1,6 @@
 language: cpp
 dist: xenial
+osx_image: xcode10.1
 
 notifications:
   email:
@@ -9,34 +10,16 @@ notifications:
     on_failure: always # default: always
 
 matrix:
+  fast_finish: true
   include:
-
-    # cppcheck
-    - os: linux
-      sudo: true
-      compiler: gcc
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - libpcre3
-            - libpcre3-dev
-      before_script:
-        - wget https://github.com/danmar/cppcheck/archive/1.87.tar.gz -O /tmp/cppcheck.tar.gz
-        - tar -xvf /tmp/cppcheck.tar.gz
-        - pushd cppcheck-1.87 && make SRCDIR=build CFGDIR=cfg HAVE_RULES=yes CXXFLAGS="-O2 -DNDEBUG -Wall -Wno-reorder -Wno-sign-compare -Wno-unused-function" && sudo make -i install CFGDIR=cfg&& popd
-        - export PATH=$PATH:$PWD/cppcheck-1.87:$PWD/cppcheck-1.87/cfg
-      script:
-        - make var
-        - make cppcheck
-
     # g++ 5
-    - os: linux
+    - name: "Linux g++-5"
+      os: linux
       compiler: gcc
 
     # g++ 8
-    - os: linux
+    - name: "Linux g++-8"
+      os: linux
       compiler: gcc
       addons:
         apt:
@@ -49,14 +32,29 @@ matrix:
         - MATRIX_EVAL="CC=gcc-8 && CXX=g++-8"
 
     # XCode 10.1
-    - os: osx
-      osx_image: xcode10.1
+    - name: "macOS clang"
+      os: osx
 
     # macOS using GCC-8
-    - os: osx
-      osx_image: xcode10.1
+    - name: "macOS g++-8"
+      os: osx
       env:
         - MATRIX_EVAL="brew update && brew install gcc && brew link gcc && CC=gcc-8 && CXX=g++-8"
+
+  allow_failures:
+    # cppcheck
+    - name: "cppcheck"
+      os: linux
+      compiler: gcc
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - cppcheck
+      script:
+        - make var
+        - make cppcheck
 
 before_install:
   - eval "${MATRIX_EVAL}"
