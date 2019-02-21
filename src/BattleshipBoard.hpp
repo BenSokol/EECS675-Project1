@@ -3,7 +3,7 @@
 * @Author:   Ben Sokol <Ben>
 * @Email:    ben@bensokol.com
 * @Created:  February 19th, 2019 [10:57am]
-* @Modified: February 20th, 2019 [11:30am]
+* @Modified: February 21st, 2019 [1:45am]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
@@ -27,7 +27,7 @@ public:
   void printInitialBoard(std::recursive_mutex &mtx, size_t playerNum = INTMAX_MAX, std::ostream &ofs = std::cout);
 
   enum positionType { OPEN, ATTACKED, TARGET, HIT, COUNT };
-  const std::array<const char, COUNT> mPositionEncodedValues = { '_', '.', 'O', '*' };
+  const std::array<const char, COUNT> mPositionEncodedValues = { { '_', '.', 'O', '*' } };
   bool isAlive();
 
   bool generateRandomCoordinates(std::pair<size_t, size_t> &coord, const char target1 = '\0', const char target2 = '\0',
