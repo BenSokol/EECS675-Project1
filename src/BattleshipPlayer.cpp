@@ -3,7 +3,7 @@
 * @Author:   Ben Sokol <Ben>
 * @Email:    ben@bensokol.com
 * @Created:  February 15th, 2019 [10:58am]
-* @Modified: February 20th, 2019 [10:53pm]
+* @Modified: February 21st, 2019 [1:52pm]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
@@ -23,7 +23,8 @@
 #include "BattleshipPlayer.hpp"
 
 BattleshipPlayer::BattleshipPlayer(size_t aPlayerNum, size_t aSize, size_t aTotalTargets)
-    : mPlayerNum(aPlayerNum),
+    : mBoard(std::unique_ptr<BattleshipBoard>(new BattleshipBoard(aSize, aTotalTargets))),
+      mPlayerNum(aPlayerNum),
       mIsAlive(true),
       mTimesRevived(0),
       mAttacksRecieved(0),
@@ -32,8 +33,6 @@ BattleshipPlayer::BattleshipPlayer(size_t aPlayerNum, size_t aSize, size_t aTota
       mAttacksLaunchedSecondaryHits(0),
       mAttacksLaunchedSecondaryMisses(0) {
   UTL_assert(aTotalTargets <= (aSize * aSize));
-
-  mBoard = std::unique_ptr<BattleshipBoard>(new BattleshipBoard(aSize, aTotalTargets));
 }
 
 BattleshipPlayer::~BattleshipPlayer() {}

@@ -3,7 +3,7 @@
 * @Author:   Ben Sokol <Ben>
 * @Email:    ben@bensokol.com
 * @Created:  February 19th, 2019 [10:58am]
-* @Modified: February 21st, 2019 [12:54am]
+* @Modified: February 21st, 2019 [1:50pm]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
@@ -19,12 +19,14 @@
 
 #include "BattleshipBoard.hpp"
 
-BattleshipBoard::BattleshipBoard(size_t aSize, size_t aTotalTargets) : mSize(aSize), mTotalTargets(aTotalTargets) {
+BattleshipBoard::BattleshipBoard(size_t aSize, size_t aTotalTargets)
+    : mSize(aSize),
+      mTotalTargets(aTotalTargets),
+      mTargetsAvailable(mTotalTargets),
+      mInitialBoard(std::vector<std::vector<char>>(mSize)),
+      mBoard(std::vector<std::vector<char>>(mSize)) {
   UTL_assert(mTotalTargets <= (mSize * mSize));
-  mTargetsAvailable = mTotalTargets;
 
-  mBoard = std::vector<std::vector<char>>(mSize);
-  mInitialBoard = std::vector<std::vector<char>>(mSize);
   for (size_t i = 0; i < mSize; ++i) {
     mBoard[i] = std::vector<char>(mSize);
     mInitialBoard[i] = std::vector<char>(mSize);
