@@ -3,7 +3,7 @@
 * @Author:   Ben Sokol
 * @Email:    ben@bensokol.com
 * @Created:  February 13th, 2019 [10:58am]
-* @Modified: February 21st, 2019 [2:48am]
+* @Modified: February 22nd, 2019 [12:55pm]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
@@ -50,24 +50,12 @@ private:
   void initPlayers(size_t playerNum);
   void battle(size_t playerNum);
   void generateReport();
-
-  template <typename T>
-  void logAndPrint(T t);
-  template <typename T, typename... Args>
-  void logAndPrint(T t, Args... args);
-
-  template <typename T>
-  void logAndPrintAlways(T t);
-  template <typename T, typename... Args>
-  void logAndPrintAlways(T t, Args... args);
-
-
-// logging
 #ifdef ENABLE_LOGGING
   void createLogFile();
-  std::ofstream mLogFile;
-  bool mLogFileSuccess;
 #endif
+
+  // logging
+  std::ofstream mLogFile;
 
   // Version
   const size_t mVersionMajor;
@@ -81,7 +69,11 @@ private:
   std::vector<std::future<void>> mThreads;
 
   // shared_mutexes/Locks
-  enum MTX { COUT, LOG, REPORT, MTX_COUNT };
+  enum MTX {
+    COUT,  // Used for std::cout
+    LOG,   // Used for logging to file
+    MTX_COUNT
+  };
   std::vector<std::recursive_mutex> mtx;
 
   // condition_variable
@@ -102,52 +94,5 @@ private:
   size_t mTargets;
   bool mValidInputParameters;
 };
-
-
-/****************************************************************
-****************************************************************/
-template <typename T>
-void Battleship::logAndPrint(T t) {
-#ifndef NDEBUG
-  TS::print(mtx[COUT], t);
-#endif
-#ifdef ENABLE_LOGGING
-  if (mLogFileSuccess) {
-    TS::log(mLogFile, mtx[LOG], t);
-  }
-#endif
-}
-
-template <typename T, typename... Args>
-void Battleship::logAndPrint(T t, Args... args) {
-#ifndef NDEBUG
-  TS::print(mtx[COUT], t, args...);
-#endif
-#ifdef ENABLE_LOGGING
-  if (mLogFileSuccess) {
-    TS::log(mLogFile, mtx[LOG], t, args...);
-  }
-#endif
-}
-
-template <typename T>
-void Battleship::logAndPrintAlways(T t) {
-  TS::print(mtx[COUT], t);
-#ifdef ENABLE_LOGGING
-  if (mLogFileSuccess) {
-    TS::log(mLogFile, mtx[LOG], t);
-  }
-#endif
-}
-
-template <typename T, typename... Args>
-void Battleship::logAndPrintAlways(T t, Args... args) {
-  TS::print(mtx[COUT], t, args...);
-#ifdef ENABLE_LOGGING
-  if (mLogFileSuccess) {
-    TS::log(mLogFile, mtx[LOG], t, args...);
-  }
-#endif
-}
 
 #endif

@@ -3,7 +3,7 @@
 * @Author:   Ben Sokol <Ben>
 * @Email:    ben@bensokol.com
 * @Created:  February 15th, 2019 [10:58am]
-* @Modified: February 21st, 2019 [1:52pm]
+* @Modified: February 22nd, 2019 [2:20pm]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
@@ -15,7 +15,7 @@
 #include <mutex>
 #include <random>
 #include <shared_mutex>
-#include <sstream>
+#include <string>
 #include <utility>
 
 #include "UTL_assert.h"
@@ -44,7 +44,7 @@ bool BattleshipPlayer::isAlive() {
   return mIsAlive;
 }
 
-bool BattleshipPlayer::attack(std::pair<size_t, size_t> & /*coord*/) {
+bool BattleshipPlayer::attack(std::pair<size_t, size_t>& /*coord*/) {
   std::unique_lock<std::recursive_mutex> lck(mMtx);
   // UTL_assert(mBoard[coord.first][coord.second] == mPositionEncodedValues[OPEN][0]
   //            || mBoard[coord.first][coord.second] == mPositionEncodedValues[TARGET][0]);
@@ -67,52 +67,51 @@ std::pair<size_t, size_t> BattleshipPlayer::getTargetCoordinates() const {
   UTL_assert_always();
 }
 
-void BattleshipPlayer::printBoard(std::recursive_mutex &mtx, std::ostream &ofs) {
-  std::lock(mMtx, mtx);
-  std::lock_guard<std::recursive_mutex> lk1(mMtx, std::adopt_lock);
-  std::lock_guard<std::recursive_mutex> lk2(mtx, std::adopt_lock);
-  mBoard->printBoard(mtx, mPlayerNum, ofs);
+std::string BattleshipPlayer::printBoard() {
+  std::lock_guard<std::recursive_mutex> lck(mMtx);
+  return mBoard->printBoard(mPlayerNum);
 }
 
-void BattleshipPlayer::printInitialBoard(std::recursive_mutex &mtx, std::ostream &ofs) {
-  std::lock(mMtx, mtx);
-  std::lock_guard<std::recursive_mutex> lk1(mMtx, std::adopt_lock);
-  std::lock_guard<std::recursive_mutex> lk2(mtx, std::adopt_lock);
-  mBoard->printInitialBoard(mtx, mPlayerNum, ofs);
+std::string BattleshipPlayer::printInitialBoard() {
+  std::lock_guard<std::recursive_mutex> lck(mMtx);
+  return mBoard->printInitialBoard(mPlayerNum);
 }
 
-void BattleshipPlayer::generateReport(std::stringstream &ss) {
+std::string BattleshipPlayer::generateReport() {
   std::unique_lock<std::recursive_mutex> lck(mMtx);
-  ss << "Player " << mPlayerNum << " Report:\n";
+  std::string str = "";
+
+  str += "Player " + std::to_string(mPlayerNum) + " Report:\n";
 
   // The number of this player's targets remaining (i.e., targets that were not hit).
-  ss << "  Targets Remaining: " << mBoard->getRemainingTargets() << "\n";
+  str += "  Targets Remaining: " + std::to_string(mBoard->getRemainingTargets()) + "\n";
 
   // The number of times this player was revived from a state of suspended animation.
-  ss << "  Times Revived:     " << mTimesRevived << "\n";
+  str += "  Times Revived:     " + std::to_string(mTimesRevived) + "\n";
 
   // The number of times this player was attacked.
-  ss << "  Attacks Recieved:  " << mAttacksRecieved << "\n";
+  str += "  Attacks Recieved:  " + std::to_string(mAttacksRecieved) + "\n";
 
   // The number of attacks this player launched.
-  ss << "  Attacks Launched:  "
-     << mAttacksLaunchedInitialHits + mAttacksLaunchedInitialMisses + mAttacksLaunchedSecondaryHits
-            + mAttacksLaunchedSecondaryMisses
-     << "\n";
+  const size_t attacksLaunched = mAttacksLaunchedInitialHits + mAttacksLaunchedInitialMisses
+                                 + mAttacksLaunchedSecondaryHits + mAttacksLaunchedSecondaryMisses;
+  str += "  Attacks Launched:  " + std::to_string(attacksLaunched) + "\n";
 
   // The number of attacks this player launched that:
-  ss << "  Attacks Launched Details:\n";
+  str += "  Attacks Launched Details:\n";
 
   // were initial hits
-  ss << "    Initial Hits:     " << mAttacksLaunchedInitialHits << "\n";
+  str += "    Initial Hits:     " + std::to_string(mAttacksLaunchedInitialHits) + "\n";
 
   // were initial misses
-  ss << "    Initial Misses:   " << mAttacksLaunchedInitialMisses << "\n";
+  str += "    Initial Misses:   " + std::to_string(mAttacksLaunchedInitialMisses) + "\n";
 
   // were secondary hits
-  ss << "    Secondary Hits:   " << mAttacksLaunchedSecondaryHits << "\n";
+  str += "    Secondary Hits:   " + std::to_string(mAttacksLaunchedSecondaryHits) + "\n";
 
   // were secondary misses
-  ss << "    Secondary Misses: " << mAttacksLaunchedSecondaryMisses << "\n";
-  ss << "\n";
+  str += "    Secondary Misses: " + std::to_string(mAttacksLaunchedSecondaryMisses) + "\n";
+  str += "\n";
+
+  return str;
 }

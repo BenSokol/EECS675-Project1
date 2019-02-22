@@ -3,7 +3,7 @@
 * @Author:   Ben Sokol
 * @Email:    ben@bensokol.com
 * @Created:  February 13th, 2019 [11:01am]
-* @Modified: February 21st, 2019 [4:11pm]
+* @Modified: February 22nd, 2019 [2:35pm]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
@@ -17,7 +17,6 @@
 #include <memory>       // std::unique_ptr
 #include <mutex>        // std::recursive_mutex
 #include <random>       // std::random_device
-#include <sstream>      // std::stringstream
 #include <string>       // std::string, std::stoull
 #include <sys/errno.h>  // errno
 #include <sys/stat.h>   // mkdir
@@ -26,6 +25,7 @@
 #include "BattleshipPlayer.hpp"
 #include "TS_latch.hpp"
 #include "TS_log.hpp"
+#include "TS_logAndPrint.hpp"
 #include "TS_print.hpp"
 #include "UTL_assert.h"
 #include "UTL_colors.h"
@@ -53,7 +53,7 @@ Battleship::Battleship(const int argc, const char *argv[]) : mVersionMajor(0), m
   mtx = std::vector<std::recursive_mutex>(MTX_COUNT);
   mBegin = std::unique_ptr<TS::Latch>(new TS::Latch(mNumThreads));
 
-  logAndPrint("Battleship Simulation Initialized...\n");
+  TS::logAndPrint(mLogFile, mtx[COUT], mtx[LOG], "Battleship Simulation Initialized...\n");
 }
 
 /****************************************************************
@@ -61,6 +61,11 @@ Battleship::Battleship(const int argc, const char *argv[]) : mVersionMajor(0), m
 *
 ****************************************************************/
 Battleship::~Battleship() {
+#ifdef ENABLE_LOGGING
+  if (mLogFile.is_open()) {
+    TS::log(mLogFile, mtx[LOG], "\nFinished Battleship Program.\n\nEnd Log.\n");
+  }
+#endif
   for (auto &thread : mThreads) {
     thread.wait();
   }
@@ -142,7 +147,6 @@ bool Battleship::initParameters(const int &argc, const char *argv[]) {
 ****************************************************************/
 #ifdef ENABLE_LOGGING
 void Battleship::createLogFile() {
-  mLogFileSuccess = true;
   // Creatue logs directory if it doesnt exist
   if (mkdir("logs", 0777) != -1) {
 #ifndef NDEBUG
@@ -150,26 +154,24 @@ void Battleship::createLogFile() {
 #endif
   }
   else if (errno != EEXIST) {
-    mLogFileSuccess = false;
     std::cout << UTL::COLOR_PURPLE_BOLD << "Warning" << UTL::COLOR_RESET
               << ": Unable to create logs directory. Error code: " << errno
               << "\n         To see what that means, see /usr/include/sys/errno.h\n";
+    return;
   }
 
-  if (mLogFileSuccess) {
-    auto clk =
-        std::chrono::duration_cast<std::chrono::seconds>(std::chrono::high_resolution_clock::now().time_since_epoch())
-            .count();
-    mLogFile.open("logs/debug-" + std::to_string(clk) + ".log", std::ofstream::out);
-    if (!mLogFile.is_open()) {
-      mLogFileSuccess = false;
-      std::cout << UTL::COLOR_PURPLE_BOLD << "Warning" << UTL::COLOR_RESET << ": Unable to create log file.\n";
-    }
-    else {
+
+  auto clk =
+      std::chrono::duration_cast<std::chrono::seconds>(std::chrono::high_resolution_clock::now().time_since_epoch())
+          .count();
+  mLogFile.open("logs/debug-" + std::to_string(clk) + ".log", std::ofstream::out);
+  if (!mLogFile.is_open()) {
+    std::cout << UTL::COLOR_PURPLE_BOLD << "Warning" << UTL::COLOR_RESET << ": Unable to create log file.\n";
+  }
+  else {
 #ifndef NDEBUG
-      std::cout << "Created log file: logs/debug-" + std::to_string(clk) + ".log\n";
+    std::cout << "Created log file: logs/debug-" + std::to_string(clk) + ".log\n";
 #endif
-    }
   }
 }
 #endif
@@ -184,7 +186,7 @@ void Battleship::initPlayers(size_t playerNum) {
   mPlayers[playerNum] = std::unique_ptr<BattleshipPlayer>(new BattleshipPlayer(playerNum, mSize, mTargets));
 
   // Report done
-  logAndPrint("Player ", playerNum, " has been initialized.\n");
+  TS::logAndPrint(mLogFile, mtx[COUT], mtx[LOG], "Player ", playerNum, " has been initialized.\n");
 }
 
 
@@ -194,14 +196,13 @@ void Battleship::initPlayers(size_t playerNum) {
 ****************************************************************/
 void Battleship::battle(size_t playerNum) {
   mBegin->count_down_and_wait();
-  logAndPrint("Starting player ", playerNum, ".\n");
+  TS::logAndPrint(mLogFile, mtx[COUT], mtx[LOG], "Starting player ", playerNum, ".\n");
   // while (mPlayers[playerNum]->isAlive()) {
   //   std::random_device rd;
   //   size_t target = rd() % mNumThreads;
   // }
   // mPlayers[playerNum]->printBoard(mtx[DEBUG], *mLogFile);
   // // Report done to standard out
-  // TS::print(mtx[COUT], "Player ", playerNum, " has been initialized.\n");
 }
 
 
@@ -210,33 +211,34 @@ void Battleship::battle(size_t playerNum) {
 *
 ****************************************************************/
 void Battleship::generateReport() {
-  std::stringstream ss;
+  std::lock(mtx[COUT], mtx[LOG]);
+  std::lock_guard<std::recursive_mutex> lckCout(mtx[COUT], std::adopt_lock);
+  std::lock_guard<std::recursive_mutex> lckLog(mtx[LOG], std::adopt_lock);
 
   // Store boards in ss if conditions below are true
   if (mNumThreads == 2 && mSize <= 40) {
-    ss << "Boards:\n";
+    mReport += "Boards:\n";
     for (auto &player : mPlayers) {
-      player->printInitialBoard(mtx[REPORT], ss);
-      player->printBoard(mtx[REPORT], ss);
+      mReport += player->printInitialBoard();
+      mReport += player->printBoard();
     }
   }
 
   // Generate report data and store in ss
   for (auto &player : mPlayers) {
-    player->generateReport(ss);
+    mReport += player->generateReport();
   }
 
   // Report time statistics
-  ss << "Time Statistics:\n";
-  ss << "  Initial Phase took "
-     << std::chrono::duration_cast<std::chrono::duration<double>>(mInitEndTimePoint - mInitStartTimePoint).count()
-     << " seconds.\n";
-  ss << "  Battle Phase took "
-     << std::chrono::duration_cast<std::chrono::duration<double>>(mBattleEndTimePoint - mBattleStartTimePoint).count()
-     << " seconds.\n";
-
-  // Store report in mReport
-  mReport = ss.str();
+  mReport += "Time Statistics:\n";
+  mReport += "  Initial Phase took ";
+  mReport += std::to_string(
+      std::chrono::duration_cast<std::chrono::duration<double>>(mInitEndTimePoint - mInitStartTimePoint).count());
+  mReport += " seconds.\n";
+  mReport += "  Battle Phase took ";
+  mReport += std::to_string(
+      std::chrono::duration_cast<std::chrono::duration<double>>(mBattleEndTimePoint - mBattleStartTimePoint).count());
+  mReport += " seconds.\n";
 }
 
 
@@ -251,10 +253,10 @@ void Battleship::run() {
   }
 
   // Init players
-  logAndPrintAlways("Initializing Players...\n");
+  TS::logAndPrintAlways(mLogFile, mtx[COUT], mtx[LOG], "Initializing Players...\n");
   mInitStartTimePoint = std::chrono::high_resolution_clock::now();
   for (size_t i = 0; i < mNumThreads; ++i) {
-    logAndPrint("Launching thread ", i, " to initialize player.\n");
+    TS::logAndPrint(mLogFile, mtx[COUT], mtx[LOG], "Launching thread ", i, " to initialize player.\n");
     mThreads[i] = std::async(std::launch::async, &Battleship::initPlayers, this, i);
   }
 
@@ -263,44 +265,49 @@ void Battleship::run() {
     thread.wait();
   }
   mInitEndTimePoint = std::chrono::high_resolution_clock::now();
-  logAndPrintAlways("Finished Initializing Players.\n");
+  TS::logAndPrintAlways(mLogFile, mtx[COUT], mtx[LOG], "Finished Initializing Players.\n");
 
   // launch battle
-  logAndPrintAlways("Starting Battle...\n");
+  TS::logAndPrintAlways(mLogFile, mtx[COUT], mtx[LOG], "Starting Battle...\n");
   mBattleStartTimePoint = std::chrono::high_resolution_clock::now();
   for (size_t i = 0; i < mNumThreads; ++i) {
-    logAndPrint("Launching thread ", i, " to go.\n");
+    TS::logAndPrint(mLogFile, mtx[COUT], mtx[LOG], "Launching thread ", i, " to go.\n");
     mThreads[i] = std::async(std::launch::async, &Battleship::battle, this, i);
   }
 
-  // Wait for battle to end
+// Wait for battle to end
+#ifdef NDEBUG
+  TS::print(mtx[COUT], "Please wait");
+  for (auto &thread : mThreads) {
+    while (thread.wait_for(std::chrono::milliseconds(100)) == std::future_status::timeout) {
+      TS::print(mtx[COUT], ".");
+    }
+  }
+#else
   for (auto &thread : mThreads) {
     thread.wait();
   }
+#endif
+
   mBattleEndTimePoint = std::chrono::high_resolution_clock::now();
-  logAndPrintAlways("Completed Battle.\n\n");
+  TS::logAndPrintAlways(mLogFile, mtx[COUT], mtx[LOG], "Completed Battle.\n\n");
 
   // Generate report
-  logAndPrintAlways("Generating Report: ");
+  TS::logAndPrintAlways(mLogFile, mtx[COUT], mtx[LOG], "Generating Report: ");
   generateReport();
-  logAndPrintAlways("Done\n\n");
+  TS::logAndPrintAlways(mLogFile, mtx[COUT], mtx[LOG], "Done\n\n");
 
 #ifdef ENABLE_LOGGING
   // Always log boards to file
-  if (mLogFileSuccess && !(mNumThreads == 2 && mSize <= 40)) {
+  if (mLogFile.is_open() && !(mNumThreads == 2 && mSize <= 40)) {
+    TS::log(mLogFile, mtx[LOG], "Boards:\n");
     for (auto &player : mPlayers) {
-      player->printInitialBoard(mtx[LOG], mLogFile);
-      player->printBoard(mtx[LOG], mLogFile);
+      TS::log(mLogFile, mtx[LOG], player->printInitialBoard());
+      TS::log(mLogFile, mtx[LOG], player->printBoard());
     }
   }
 #endif
 
   // Output report
-  logAndPrintAlways(mReport);
-
-#ifdef ENABLE_LOGGING
-  if (mLogFileSuccess) {
-    TS::log(mLogFile, mtx[LOG], "Finished Battleship Program.\nEnd Log.\n");
-  }
-#endif
+  TS::logAndPrintAlways(mLogFile, mtx[COUT], mtx[LOG], mReport);
 }

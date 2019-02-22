@@ -3,7 +3,7 @@
 * @Author:   Ben Sokol <Ben>
 * @Email:    ben@bensokol.com
 * @Created:  February 15th, 2019 [10:57am]
-* @Modified: February 20th, 2019 [10:33pm]
+* @Modified: February 22nd, 2019 [12:42pm]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
@@ -16,7 +16,7 @@
 #include <cstdlib>
 #include <memory>
 #include <mutex>
-#include <sstream>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -36,11 +36,11 @@ public:
 
   bool isAlive();
   bool attack(std::pair<size_t, size_t> &coord);
-  void printBoard(std::recursive_mutex &mtx, std::ostream &ofs = std::cout);
-  void printInitialBoard(std::recursive_mutex &mtx, std::ostream &ofs = std::cout);
+  std::string printBoard();
+  std::string printInitialBoard();
   std::pair<size_t, size_t> getTargetCoordinates() const;
 
-  void generateReport(std::stringstream &ss);
+  std::string generateReport();
 
 private:
   std::unique_ptr<BattleshipBoard> mBoard;

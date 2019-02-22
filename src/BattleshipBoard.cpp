@@ -3,7 +3,7 @@
 * @Author:   Ben Sokol <Ben>
 * @Email:    ben@bensokol.com
 * @Created:  February 19th, 2019 [10:58am]
-* @Modified: February 21st, 2019 [1:50pm]
+* @Modified: February 22nd, 2019 [2:39pm]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
@@ -97,36 +97,42 @@ bool BattleshipBoard::generateRandomCoordinates(std::pair<size_t, size_t> &coord
 }
 
 
-void BattleshipBoard::printBoard(std::recursive_mutex &mtx, size_t playerNum, std::ostream &ofs) {
-  std::lock(mMtx, mtx);
-  std::lock_guard<std::recursive_mutex> lk1(mMtx, std::adopt_lock);
-  std::lock_guard<std::recursive_mutex> lk2(mtx, std::adopt_lock);
+std::string BattleshipBoard::printBoard(size_t playerNum) {
+  std::lock_guard<std::recursive_mutex> lck(mMtx);
+  std::string str = "";
   if (playerNum != INTMAX_MAX) {
-    ofs << "Player " << playerNum << " (Current Board):\n" << std::flush;
+    str += "Player ";
+    str += std::to_string(playerNum);
+    str += " (Current Board):\n";
   }
   for (auto &vec : mBoard) {
-    for (auto &i : vec) {
-      ofs << i << std::flush;
-    }
-    ofs << "\n" << std::flush;
+    std::string tempStr = "";
+    tempStr.resize(vec.size());
+    std::copy(vec.begin(), vec.end(), tempStr.begin());
+    str += tempStr;
+    str += "\n";
   }
-  ofs << "\n" << std::flush;
+  str += "\n";
+  return str;
 }
 
-void BattleshipBoard::printInitialBoard(std::recursive_mutex &mtx, size_t playerNum, std::ostream &ofs) {
-  std::lock(mMtx, mtx);
-  std::lock_guard<std::recursive_mutex> lk1(mMtx, std::adopt_lock);
-  std::lock_guard<std::recursive_mutex> lk2(mtx, std::adopt_lock);
+std::string BattleshipBoard::printInitialBoard(size_t playerNum) {
+  std::lock_guard<std::recursive_mutex> lck(mMtx);
+  std::string str = "";
   if (playerNum != INTMAX_MAX) {
-    ofs << "Player " << playerNum << " (Initial Board):\n" << std::flush;
+    str += "Player ";
+    str += std::to_string(playerNum);
+    str += " (Initial Board):\n";
   }
-  for (auto &vec : mInitialBoard) {
-    for (auto &i : vec) {
-      ofs << i << std::flush;
-    }
-    ofs << "\n" << std::flush;
+  for (std::vector<char> &vec : mInitialBoard) {
+    std::string tempStr = "";
+    tempStr.resize(vec.size());
+    std::copy(vec.begin(), vec.end(), tempStr.begin());
+    str += tempStr;
+    str += "\n";
   }
-  ofs << "\n" << std::flush;
+  str += "\n";
+  return str;
 }
 
 size_t BattleshipBoard::getRemainingTargets() {
