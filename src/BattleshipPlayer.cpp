@@ -3,7 +3,7 @@
 * @Author:   Ben Sokol <Ben>
 * @Email:    ben@bensokol.com
 * @Created:  February 15th, 2019 [10:58am]
-* @Modified: February 22nd, 2019 [2:20pm]
+* @Modified: February 22nd, 2019 [11:43pm]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
@@ -14,7 +14,6 @@
 #include <iostream>
 #include <mutex>
 #include <random>
-#include <shared_mutex>
 #include <string>
 #include <utility>
 
@@ -23,11 +22,11 @@
 #include "BattleshipPlayer.hpp"
 
 BattleshipPlayer::BattleshipPlayer(size_t aPlayerNum, size_t aSize, size_t aTotalTargets)
-    : mBoard(std::unique_ptr<BattleshipBoard>(new BattleshipBoard(aSize, aTotalTargets))),
+    : mBoard(std::shared_ptr<BattleshipBoard>(new BattleshipBoard(aSize, aTotalTargets))),
       mPlayerNum(aPlayerNum),
       mIsAlive(true),
       mTimesRevived(0),
-      mAttacksRecieved(0),
+      mAttacksReceived(0),
       mAttacksLaunchedInitialHits(0),
       mAttacksLaunchedInitialMisses(0),
       mAttacksLaunchedSecondaryHits(0),
@@ -35,41 +34,68 @@ BattleshipPlayer::BattleshipPlayer(size_t aPlayerNum, size_t aSize, size_t aTota
   UTL_assert(aTotalTargets <= (aSize * aSize));
 }
 
+
 BattleshipPlayer::~BattleshipPlayer() {}
 
 
 bool BattleshipPlayer::isAlive() {
   std::unique_lock<std::recursive_mutex> lck(mMtx);
-  mIsAlive = mBoard->isAlive();
   return mIsAlive;
 }
 
-bool BattleshipPlayer::attack(std::pair<size_t, size_t>& /*coord*/) {
-  std::unique_lock<std::recursive_mutex> lck(mMtx);
-  // UTL_assert(mBoard[coord.first][coord.second] == mPositionEncodedValues[OPEN][0]
-  //            || mBoard[coord.first][coord.second] == mPositionEncodedValues[TARGET][0]);
-  //
-  // if (mBoard[coord.first][coord.second] == mPositionEncodedValues[OPEN][0]) {
-  //   mBoard[coord.first][coord.second] = mPositionEncodedValues[ATTACKED][0];
-  //   return false;
-  // }
-  // else if (mBoard[coord.first][coord.second] == mPositionEncodedValues[TARGET][0]) {
-  //   mBoard[coord.first][coord.second] = mPositionEncodedValues[HIT][0];
-  //   return true;
-  // }
 
-  return false;
+void BattleshipPlayer::launchAttack(std::shared_ptr<BattleshipPlayer> target, BattleshipBoard::coordinate_t &coord) {
+  std::lock(mMtx, target->mMtx);
+  std::lock_guard<std::recursive_mutex> lck(mMtx, std::adopt_lock);
+  std::lock_guard<std::recursive_mutex> lckTarget(target->mMtx, std::adopt_lock);
+  UTL_assert(coord.getRow() != coord.invalid() && coord.getCol() != coord.invalid());
+
+  BattleshipBoard::ATTACK_RESULT result = target->mBoard->attackLocation(coord);
+
+  // Update this attack launched status
+  if (result == BattleshipBoard::ATTACK_RESULT_INITIAL_HIT) {
+    mAttacksLaunchedInitialHits++;
+  }
+  else if (result == BattleshipBoard::ATTACK_RESULT_INITIAL_MISS) {
+    mAttacksLaunchedInitialMisses++;
+  }
+  else if (result == BattleshipBoard::ATTACK_RESULT_SECONDARY_HIT) {
+    mAttacksLaunchedSecondaryHits++;
+  }
+  else if (result == BattleshipBoard::ATTACK_RESULT_SECONDARY_MISS) {
+    mAttacksLaunchedSecondaryMisses++;
+  }
+  else {
+    UTL_assert_always();
+  }
+
+  // Update target mAttacksReceived
+  target->mAttacksReceived++;
+
+  // Update target isAlive
+  target->mIsAlive = target->mBoard->isAlive();
 }
 
 
-std::pair<size_t, size_t> BattleshipPlayer::getTargetCoordinates() const {
-  // mBoard->generateRandomCoordinates(mPositionEncodedValues[OPEN], mPositionEncodedValues[TARGET]);
-  UTL_assert_always();
-}
-
-std::string BattleshipPlayer::printBoard() {
+BattleshipBoard::coordinate_t BattleshipPlayer::getTargetCoordinates() {
   std::lock_guard<std::recursive_mutex> lck(mMtx);
-  return mBoard->printBoard(mPlayerNum);
+  if (!mIsAlive) {
+    return BattleshipBoard::coordinate_t();
+  }
+  BattleshipBoard::coordinate_t coordinate = mBoard->getAvailableTarget();
+
+  return coordinate;
+}
+
+
+std::string BattleshipPlayer::printBoard(BattleshipBoard::whichBoard board) {
+  std::lock_guard<std::recursive_mutex> lck(mMtx);
+  return mBoard->printBoard(board, mPlayerNum);
+}
+
+std::string BattleshipPlayer::printCurrentBoard() {
+  std::lock_guard<std::recursive_mutex> lck(mMtx);
+  return mBoard->printCurrentBoard(mPlayerNum);
 }
 
 std::string BattleshipPlayer::printInitialBoard() {
@@ -77,41 +103,62 @@ std::string BattleshipPlayer::printInitialBoard() {
   return mBoard->printInitialBoard(mPlayerNum);
 }
 
+
 std::string BattleshipPlayer::generateReport() {
-  std::unique_lock<std::recursive_mutex> lck(mMtx);
+  std::lock_guard<std::recursive_mutex> lck(mMtx);
+
+  const size_t attacksLaunched = mAttacksLaunchedInitialHits + mAttacksLaunchedInitialMisses
+                                 + mAttacksLaunchedSecondaryHits + mAttacksLaunchedSecondaryMisses;
+
   std::string str = "";
 
   str += "Player " + std::to_string(mPlayerNum) + " Report:\n";
-
-  // The number of this player's targets remaining (i.e., targets that were not hit).
   str += "  Targets Remaining: " + std::to_string(mBoard->getRemainingTargets()) + "\n";
-
-  // The number of times this player was revived from a state of suspended animation.
-  str += "  Times Revived:     " + std::to_string(mTimesRevived) + "\n";
-
-  // The number of times this player was attacked.
-  str += "  Attacks Recieved:  " + std::to_string(mAttacksRecieved) + "\n";
-
-  // The number of attacks this player launched.
-  const size_t attacksLaunched = mAttacksLaunchedInitialHits + mAttacksLaunchedInitialMisses
-                                 + mAttacksLaunchedSecondaryHits + mAttacksLaunchedSecondaryMisses;
-  str += "  Attacks Launched:  " + std::to_string(attacksLaunched) + "\n";
-
-  // The number of attacks this player launched that:
-  str += "  Attacks Launched Details:\n";
-
-  // were initial hits
-  str += "    Initial Hits:     " + std::to_string(mAttacksLaunchedInitialHits) + "\n";
-
-  // were initial misses
-  str += "    Initial Misses:   " + std::to_string(mAttacksLaunchedInitialMisses) + "\n";
-
-  // were secondary hits
-  str += "    Secondary Hits:   " + std::to_string(mAttacksLaunchedSecondaryHits) + "\n";
-
-  // were secondary misses
-  str += "    Secondary Misses: " + std::to_string(mAttacksLaunchedSecondaryMisses) + "\n";
+  str += "  Times Revived: " + std::to_string(mTimesRevived) + "\n";
+  str += "  Attacks Received: " + std::to_string(mAttacksReceived) + "\n";
+  str += "  Attacks Launched: " + std::to_string(attacksLaunched) + "\n";
+  str += "    Details:\n";
+  str += "      Initial Hits:     " + std::to_string(mAttacksLaunchedInitialHits) + "\n";
+  str += "      Initial Misses:   " + std::to_string(mAttacksLaunchedInitialMisses) + "\n";
+  str += "      Secondary Hits:   " + std::to_string(mAttacksLaunchedSecondaryHits) + "\n";
+  str += "      Secondary Misses: " + std::to_string(mAttacksLaunchedSecondaryMisses) + "\n";
   str += "\n";
 
   return str;
+}
+
+
+void BattleshipPlayer::revive() {
+  std::lock_guard<std::recursive_mutex> lck(mMtx);
+  mBoard->revive(2);
+  mTimesRevived++;
+  mIsAlive = true;
+}
+
+
+size_t BattleshipPlayer::getPlayerNum() const {
+  return mPlayerNum;
+}
+
+
+size_t BattleshipPlayer::getRemainingTargets() const {
+  return mBoard->getRemainingTargets();
+}
+size_t BattleshipPlayer::getTimesRevived() const {
+  return mTimesRevived;
+}
+size_t BattleshipPlayer::getAttacksReceived() const {
+  return mAttacksReceived;
+}
+size_t BattleshipPlayer::getAttacksLaunchedInitialHits() const {
+  return mAttacksLaunchedInitialHits;
+}
+size_t BattleshipPlayer::getAttacksLaunchedInitialMisses() const {
+  return mAttacksLaunchedInitialMisses;
+}
+size_t BattleshipPlayer::getAttacksLaunchedSecondaryHits() const {
+  return mAttacksLaunchedSecondaryHits;
+}
+size_t BattleshipPlayer::getAttacksLaunchedSecondaryMisses() const {
+  return mAttacksLaunchedSecondaryMisses;
 }

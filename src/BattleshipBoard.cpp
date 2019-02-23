@@ -3,17 +3,14 @@
 * @Author:   Ben Sokol <Ben>
 * @Email:    ben@bensokol.com
 * @Created:  February 19th, 2019 [10:58am]
-* @Modified: February 22nd, 2019 [2:39pm]
+* @Modified: February 22nd, 2019 [11:18pm]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
 */
 
-#include <iostream>
 #include <mutex>
 #include <random>
-#include <shared_mutex>
-#include <utility>
 
 #include "UTL_assert.h"
 
@@ -22,25 +19,40 @@
 BattleshipBoard::BattleshipBoard(size_t aSize, size_t aTotalTargets)
     : mSize(aSize),
       mTotalTargets(aTotalTargets),
-      mTargetsAvailable(mTotalTargets),
-      mInitialBoard(std::vector<std::vector<char>>(mSize)),
-      mBoard(std::vector<std::vector<char>>(mSize)) {
+      mTargetsAvailable(aTotalTargets),
+      mNotAttackedSpotsRemaining(aSize * aSize),
+      mInitialBoard(std::vector<std::vector<char>>(mSize, std::vector<char>(mSize, '_'))),
+      mBoard(std::vector<std::vector<char>>(mSize, std::vector<char>(mSize, '_'))) {
   UTL_assert(mTotalTargets <= (mSize * mSize));
 
-  for (size_t i = 0; i < mSize; ++i) {
-    mBoard[i] = std::vector<char>(mSize);
-    mInitialBoard[i] = std::vector<char>(mSize);
-    std::fill(mBoard[i].begin(), mBoard[i].end(), '_');
-    std::fill(mInitialBoard[i].begin(), mInitialBoard[i].end(), '_');
-  }
-
+  std::random_device rd;
   for (size_t i = 0; i < mTotalTargets; ++i) {
-    std::pair<size_t, size_t> coord;
-    if (!generateRandomCoordinates(coord, mPositionEncodedValues[OPEN])) {
-      UTL_assert_always();
+    coordinate_t coordinate((rd() % mSize), (rd() % mSize));
+
+    // Find and add targets to board
+    for (size_t j = 0;; ++j) {
+      UTL_assert(j < (mSize * mSize));
+      if (j >= (mSize * mSize)) {
+        // Should never reach here.
+        throw("ERROR: Couldnt find free spot to add target.");
+      }
+      else if (mBoard[coordinate.row][coordinate.col] == '_') {
+        mBoard[coordinate.row][coordinate.col] = 'O';
+        mInitialBoard[coordinate.row][coordinate.col] = 'O';
+        break;
+      }
+      if (coordinate.row < (mSize - 1)) {
+        coordinate.row++;
+      }
+      else if (coordinate.col < (mSize - 1)) {
+        coordinate.row = 0;
+        coordinate.col++;
+      }
+      else {
+        coordinate.row = 0;
+        coordinate.col = 0;
+      }
     }
-    mBoard[coord.first][coord.second] = 'O';
-    mInitialBoard[coord.first][coord.second] = 'O';
   }
 }
 
@@ -49,93 +61,152 @@ BattleshipBoard::~BattleshipBoard() {}
 
 
 bool BattleshipBoard::isAlive() {
-  std::lock_guard<std::recursive_mutex> lk1(mMtx);
   return mTargetsAvailable > 0;
 }
 
 
-bool BattleshipBoard::generateRandomCoordinates(std::pair<size_t, size_t> &coord, const char target1 /* = '\0' */,
-                                                const char target2 /* = '\0' */, const char target3 /* = '\0' */,
-                                                const char target4 /* = '\0' */) {
-  std::lock_guard<std::recursive_mutex> lk1(mMtx);
+BattleshipBoard::coordinate_t BattleshipBoard::getAvailableTarget() {
   std::random_device rd;
 
-  if (mTargetsAvailable == 0) {
-    return false;
+  if (mNotAttackedSpotsRemaining == 0) {
+    return coordinate_t();
   }
 
-  if (target1 == '\0' && target2 == '\0' && target3 == '\0' && target4 == '\0') {
-    coord = std::pair<size_t, size_t>((rd() % mSize), (rd() % mSize));
+  coordinate_t coordinate((rd() % mSize), (rd() % mSize));
+  // for (size_t j = 0; j < mSize; ++j) {
+  //   for (size_t k = 0; k < mSize; ++k) {
+  //     if (mBoard[coordinate.row][coordinate.col] == '_' || mBoard[coordinate.row][coordinate.col] == 'O') {
+  //       break;
+  //     }
+  //     coordinate.row = (coordinate.row + k) % mSize;
+  //   }
+  //   if (mBoard[coordinate.row][coordinate.col] == '_' || mBoard[coordinate.row][coordinate.col] == 'O') {
+  //     break;
+  //   }
+  //   coordinate.col = (coordinate.col + j) % mSize;
+  // }
+  for (size_t i = 0;; ++i) {
+    UTL_assert(i < (mSize * mSize));
+    if (i >= (mSize * mSize)) {
+      throw("ERROR: Unable to find target, but mNotAttackedSpotsRemaining > 0.");
+    }
+    else if (mBoard[coordinate.row][coordinate.col] == '_' || mBoard[coordinate.row][coordinate.col] == 'O') {
+      break;
+    }
+    else if (coordinate.row < (mSize - 1)) {
+      coordinate.row++;
+    }
+    else if (coordinate.col < (mSize - 1)) {
+      coordinate.row = 0;
+      coordinate.col++;
+    }
+    else {
+      coordinate.row = 0;
+      coordinate.col = 0;
+    }
   }
-  else if (target1 != '\0' && target2 == '\0' && target3 == '\0' && target4 == '\0') {
-    do {
-      coord = std::pair<size_t, size_t>((rd() % mSize), (rd() % mSize));
-    } while (mBoard[coord.first][coord.second] != target1);
+  return coordinate;
+}
+
+
+std::string BattleshipBoard::printCurrentBoard(size_t playerNum) {
+  return printBoard(CURRENT, playerNum);
+}
+
+std::string BattleshipBoard::printInitialBoard(size_t playerNum) {
+  return printBoard(INITIAL, playerNum);
+}
+
+std::string BattleshipBoard::printBoard(whichBoard board, size_t playerNum) {
+  std::string str = "";
+  if (playerNum != std::numeric_limits<size_t>::max()) {
+    str += "Player ";
+    str += std::to_string(playerNum);
+    if (board == INITIAL) {
+      str += " (Initial Board):\n";
+    }
+    else if (board == CURRENT) {
+      str += " (Current Board):\n";
+    }
+    else {
+      UTL_assert_always();
+    }
   }
-  else if (target1 != '\0' && target2 != '\0' && target3 == '\0' && target4 == '\0') {
-    do {
-      coord = std::pair<size_t, size_t>((rd() % mSize), (rd() % mSize));
-    } while (mBoard[coord.first][coord.second] != target1 && mBoard[coord.first][coord.second] != target2);
+  std::vector<std::vector<char>> *boardToPrint = nullptr;
+  if (board == INITIAL) {
+    boardToPrint = &mInitialBoard;
   }
-  else if (target1 != '\0' && target2 != '\0' && target3 != '\0' && target4 == '\0') {
-    do {
-      coord = std::pair<size_t, size_t>((rd() % mSize), (rd() % mSize));
-    } while (mBoard[coord.first][coord.second] != target1 && mBoard[coord.first][coord.second] != target2
-             && mBoard[coord.first][coord.second] != target3);
-  }
-  else if (target1 != '\0' && target2 != '\0' && target3 != '\0' && target4 != '\0') {
-    do {
-      coord = std::pair<size_t, size_t>((rd() % mSize), (rd() % mSize));
-    } while (mBoard[coord.first][coord.second] != target1 && mBoard[coord.first][coord.second] != target2
-             && mBoard[coord.first][coord.second] != target3 && mBoard[coord.first][coord.second] != target4);
+  else if (board == CURRENT) {
+    boardToPrint = &mBoard;
   }
   else {
     UTL_assert_always();
   }
-
-  return true;
-}
-
-
-std::string BattleshipBoard::printBoard(size_t playerNum) {
-  std::lock_guard<std::recursive_mutex> lck(mMtx);
-  std::string str = "";
-  if (playerNum != INTMAX_MAX) {
-    str += "Player ";
-    str += std::to_string(playerNum);
-    str += " (Current Board):\n";
-  }
-  for (auto &vec : mBoard) {
-    std::string tempStr = "";
-    tempStr.resize(vec.size());
-    std::copy(vec.begin(), vec.end(), tempStr.begin());
-    str += tempStr;
-    str += "\n";
-  }
-  str += "\n";
-  return str;
-}
-
-std::string BattleshipBoard::printInitialBoard(size_t playerNum) {
-  std::lock_guard<std::recursive_mutex> lck(mMtx);
-  std::string str = "";
-  if (playerNum != INTMAX_MAX) {
-    str += "Player ";
-    str += std::to_string(playerNum);
-    str += " (Initial Board):\n";
-  }
-  for (std::vector<char> &vec : mInitialBoard) {
-    std::string tempStr = "";
-    tempStr.resize(vec.size());
-    std::copy(vec.begin(), vec.end(), tempStr.begin());
-    str += tempStr;
-    str += "\n";
+  if (boardToPrint) {
+    for (std::vector<char> &vec : *boardToPrint) {
+      std::string tempStr = "";
+      tempStr.resize(vec.size());
+      std::copy(vec.begin(), vec.end(), tempStr.begin());
+      str += tempStr;
+      str += "\n";
+    }
   }
   str += "\n";
   return str;
 }
 
 size_t BattleshipBoard::getRemainingTargets() {
-  std::lock_guard<std::recursive_mutex> lk1(mMtx);
   return mTargetsAvailable;
+}
+
+BattleshipBoard::ATTACK_RESULT BattleshipBoard::attackLocation(coordinate_t &coordinate) {
+  if (mBoard[coordinate.row][coordinate.col] == '_') {
+    mBoard[coordinate.row][coordinate.col] = '.';
+    mNotAttackedSpotsRemaining--;
+    return ATTACK_RESULT_INITIAL_MISS;
+  }
+  else if (mBoard[coordinate.row][coordinate.col] == 'O') {
+    mBoard[coordinate.row][coordinate.col] = '*';
+    mTargetsAvailable--;
+    mNotAttackedSpotsRemaining--;
+    return ATTACK_RESULT_INITIAL_HIT;
+  }
+  else if (mBoard[coordinate.row][coordinate.col] == '.') {
+    return ATTACK_RESULT_SECONDARY_MISS;
+  }
+  else if (mBoard[coordinate.row][coordinate.col] == '*') {
+    return ATTACK_RESULT_SECONDARY_HIT;
+  }
+  else {
+    return COUNT;
+  }
+}
+
+
+void BattleshipBoard::revive(size_t numberOfTargetsToAdd) {
+  std::random_device rd;
+
+  for (size_t i = 0; i < numberOfTargetsToAdd; ++i) {
+    coordinate_t coordinate((rd() % mSize), (rd() % mSize));
+    bool foundTarget = false;
+
+    // Find and add targets to board
+    for (size_t j = 0; j < mSize && !foundTarget; ++j) {
+      for (size_t k = 0; k < mSize && !foundTarget; ++k) {
+        if (mBoard[coordinate.row][coordinate.col] != 'O') {
+          foundTarget = true;
+          break;
+        }
+        coordinate.col = (coordinate.col + k) % mSize;
+      }
+      if (mBoard[coordinate.row][coordinate.col] != 'O') {
+        break;
+      }
+      coordinate.row = (coordinate.row + j) % mSize;
+    }
+    mBoard[coordinate.row][coordinate.col] = 'O';
+    mTotalTargets++;
+    mTargetsAvailable++;
+    mNotAttackedSpotsRemaining++;
+  }
 }

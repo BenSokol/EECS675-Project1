@@ -3,7 +3,7 @@
 * @Author:   Ben Sokol <Ben>
 * @Email:    ben@bensokol.com
 * @Created:  February 19th, 2019 [10:57am]
-* @Modified: February 22nd, 2019 [2:10pm]
+* @Modified: February 22nd, 2019 [9:31pm]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
@@ -12,37 +12,81 @@
 #ifndef BATTLESHIPBOARD_HPP
 #define BATTLESHIPBOARD_HPP
 
-#include <array>
-#include <cstdint>
-#include <iostream>
+#include <limits>
 #include <mutex>
 #include <string>
 #include <vector>
 
+
 class BattleshipBoard {
 public:
+  class coordinate_t {
+    friend class BattleshipBoard;
+
+  public:
+    coordinate_t(size_t aCol, size_t aRow) {
+      col = aCol;
+      row = aRow;
+    }
+    coordinate_t() {
+      row = std::numeric_limits<size_t>::max();
+      col = std::numeric_limits<size_t>::max();
+    }
+    size_t getCol() const {
+      return col;
+    }
+    size_t getRow() const {
+      return row;
+    }
+    void setCol(size_t aCol) {
+      col = aCol;
+    }
+    void setRow(size_t aRow) {
+      row = aRow;
+    }
+
+    size_t invalid() const {
+      return std::numeric_limits<size_t>::max();
+    }
+
+  private:
+    size_t col;
+    size_t row;
+  };
+
+  enum whichBoard { INITIAL, CURRENT };
+  enum ATTACK_RESULT {
+    ATTACK_RESULT_INITIAL_HIT,
+    ATTACK_RESULT_INITIAL_MISS,
+    ATTACK_RESULT_SECONDARY_HIT,
+    ATTACK_RESULT_SECONDARY_MISS,
+    COUNT
+  };
+
   BattleshipBoard(size_t aSize, size_t aTotalTargets);
   ~BattleshipBoard();
 
-  std::string printBoard(size_t playerNum = INTMAX_MAX);
-  std::string printInitialBoard(size_t playerNum = INTMAX_MAX);
+  std::string printBoard(whichBoard board = CURRENT, size_t playerNum = std::numeric_limits<size_t>::max());
+  std::string printCurrentBoard(size_t playerNum = std::numeric_limits<size_t>::max());
+  std::string printInitialBoard(size_t playerNum = std::numeric_limits<size_t>::max());
 
-  enum positionType { OPEN, ATTACKED, TARGET, HIT, COUNT };
-  const std::array<const char, COUNT> mPositionEncodedValues = { { '_', '.', 'O', '*' } };
   bool isAlive();
 
-  bool generateRandomCoordinates(std::pair<size_t, size_t> &coord, const char target1 = '\0', const char target2 = '\0',
-                                 const char target3 = '\0', const char target4 = '\0');
+  BattleshipBoard::coordinate_t getAvailableTarget();
 
   size_t getRemainingTargets();
 
+  ATTACK_RESULT attackLocation(coordinate_t &coordinate);
+
+  void revive(size_t numberOfTargetsToAdd = 2);
+
 private:
   const size_t mSize;
-  const size_t mTotalTargets;
+  size_t mTotalTargets;
   size_t mTargetsAvailable;
+  size_t mNotAttackedSpotsRemaining;
   std::vector<std::vector<char>> mInitialBoard;
   std::vector<std::vector<char>> mBoard;
-  std::recursive_mutex mMtx;
 };
 
 #endif
